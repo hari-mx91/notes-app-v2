@@ -10,7 +10,6 @@ export default function DashboardPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const router = useRouter()
-
   const supabase = createClient()
 
   const fetchNotes = async () => {
@@ -24,25 +23,21 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchNotes() }, [])
 
-const addNote = async () => {
-  if (!title) return
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) { router.push('/login'); return }
+  const addNote = async () => {
+    if (!title) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/login'); return }
 
-  const { error } = await supabase
-    .from('notes')
-    .insert({ title, content, user_id: user.id })
-  
-  if (!error) {
-    setTitle('')
-    setContent('')
-    fetchNotes()
-  } else {
-    console.log('Insert error:', error)
+    const { error } = await supabase
+      .from('notes')
+      .insert({ title, content, user_id: user.id })
+
+    if (!error) {
+      setTitle('')
+      setContent('')
+      fetchNotes()
+    }
   }
-}
 
   const deleteNote = async (id: string) => {
     await supabase.from('notes').delete().eq('id', id)
@@ -54,41 +49,80 @@ const addNote = async () => {
     router.push('/login')
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <p className="text-zinc-400">Loading...</p>
+      </div>
+    )
+  }
 
   return (
-    <div style={{ padding: '40px' }}>
-      <h1>My Notes</h1>
-      <button onClick={logout}>Logout</button>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="max-w-2xl mx-auto px-6 py-10">
 
-      <div style={{ marginTop: '20px' }}>
-        <input
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <br />
-        <textarea
-          placeholder="Content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        <br />
-        <button onClick={addNote}>Add Note</button>
-      </div>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-semibold">My Notes</h1>
+          <button
+            onClick={logout}
+            className="text-sm text-zinc-400 hover:text-zinc-100 transition"
+          >
+            Logout
+          </button>
+        </div>
 
-      <div style={{ marginTop: '30px' }}>
-        {notes.length === 0 ? (
-          <p>No notes yet.</p>
-        ) : (
-          notes.map((note) => (
-            <div key={note.id} style={{ border: '1px solid gray', margin: '10px', padding: '10px' }}>
-              <h3>{note.title}</h3>
-              <p>{note.content}</p>
-              <button onClick={() => deleteNote(note.id)}>Delete</button>
-            </div>
-          ))
-        )}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 mb-8">
+          <input
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full bg-transparent text-lg font-medium placeholder-zinc-500 outline-none mb-3"
+          />
+          <textarea
+            placeholder="Write something..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={3}
+            className="w-full bg-transparent text-sm text-zinc-300 placeholder-zinc-500 outline-none resize-none mb-4"
+          />
+          <button
+            onClick={addNote}
+            className="bg-zinc-100 text-zinc-900 text-sm font-medium px-4 py-2 rounded-lg hover:bg-white transition"
+          >
+            Add Note
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {notes.length === 0 ? (
+            <p className="text-zinc-500 text-sm text-center py-10">
+              No notes yet. Write your first one above.
+            </p>
+          ) : (
+            notes.map((note) => (
+              <div
+                key={note.id}
+                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 group hover:border-zinc-700 transition"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-medium text-zinc-100">{note.title}</h3>
+                    {note.content && (
+                      <p className="text-sm text-zinc-400 mt-1">{note.content}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => deleteNote(note.id)}
+                    className="text-xs text-zinc-600 hover:text-red-400 transition opacity-0 group-hover:opacity-100"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
       </div>
     </div>
   )
